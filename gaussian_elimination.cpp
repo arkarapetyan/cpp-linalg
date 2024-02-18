@@ -1,5 +1,5 @@
 #include "linalg.h"
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
 using namespace std;
@@ -7,9 +7,9 @@ using namespace std;
 int column_non_zero_index(double **matrix, size_t m, size_t start, size_t c);
 int column_min_non_zero_index(double **matrix, size_t m, size_t start, size_t c);
 void eliminate_column(double **matrix, size_t m, size_t n, size_t pivot, size_t c);
-void interchange_rows(double **matrix, size_t n, size_t i, size_t j);
-void multiply_row(double **matrix, size_t n, size_t i, double coef);
-void add_row_multiple(double **matrix, size_t n, size_t i, size_t j, double coef);
+void interchange_rows(double *r1, double *r2, size_t n);
+void multiply_row(double *r, size_t n, double coef);
+void add_row_multiple(double *r1, double *r2, size_t n, double coef);
 
 void gaussian_elimination(double **matrix, size_t m, size_t n, bool optimal_pivots)
 {
@@ -39,11 +39,11 @@ void gaussian_elimination(double **matrix, size_t m, size_t n, bool optimal_pivo
 
         if (i != r)
         {
-            interchange_rows(matrix, n, i, r); // Move the Non-Zero entry to the pivot place
+            interchange_rows(matrix[i], matrix[r], n); // Move the Non-Zero entry to the pivot place
         }
         if (optimal_pivots && matrix[r][c] < 0) //Make the Pivot Positive
         {
-            multiply_row(matrix, n, r, -1.0);
+            multiply_row(matrix[r], n, -1.0);
         }
 
         eliminate_column(matrix, m, n, r, c); // Eliminate other Column Entries
@@ -55,7 +55,7 @@ int column_non_zero_index(double **matrix, size_t m, size_t start, size_t c)
 {
     for (size_t k = start + 1; k < m; k++)
     {
-        if (matrix[k][c] == 0)
+        if (matrix[k][c] != 0)
         {
             return k;
         }
@@ -95,39 +95,39 @@ void eliminate_column(double **matrix, size_t m, size_t n, size_t pivot, size_t 
         }
 
         double coef = -(matrix[k][c] / matrix[pivot][c]);
-        add_row_multiple(matrix, n, k, pivot, coef);
+        add_row_multiple(matrix[k], matrix[pivot], n, coef);
     }
 }
 
-void interchange_rows(double **matrix, size_t n, size_t i, size_t j)
+void interchange_rows(double *r1, double *r2, size_t n)
 {
     double t;
     for (size_t k = 0; k < n; k++)
     {
-        t = matrix[i][k];
-        matrix[i][k] = matrix[j][k];
-        matrix[j][k] = t;
+        t = r1[k];
+        r1[k] = r2[k];
+        r2[k] = t;
     }
 };
 
-void multiply_row(double **matrix, size_t n, size_t i, double coef)
+void multiply_row(double *r, size_t n, double coef)
 {
-    for (size_t c = 0; c < n; c++)
+    for (size_t k = 0; k < n; k++)
     {
-        if(matrix[i][c] != 0) // Avoid -0.0
+        if(r[k] != 0) // Avoid -0.0
         {
-            matrix[i][c] = coef * matrix[i][c];
+            r[k] = coef * r[k];
         }        
     }
 };
 
-void add_row_multiple(double **matrix, size_t n, size_t i, size_t j, double coef)
+void add_row_multiple(double *r1, double *r2, size_t n, double coef)
 {
-    for (size_t c = 0; c < n; c++)
+    for (size_t k = 0; k < n; k++)
     {
-        if(matrix[j][c] != 0) // Avoid -0.0
+        if(r2[k] != 0) // Avoid -0.0
         {
-            matrix[i][c] += coef * matrix[j][c];
+            r1[k] += coef * r2[k];
         }        
     }
 };
